@@ -1,0 +1,113 @@
+% Whisking vs. Nonwhisking spike rate, colored sharp touch cells
+
+Si_DADir = ('Z:\Users\Andrew\Whisker Project\Silicon\DiscrimAnalysisArrays\');
+SU_DADir = ('Z:\Users\Andrew\Whisker Project\SingleUnit\DiscrimAnalysisArrays\');
+
+SU_nums = [1:36 38:53];
+Si_nums = 1:148;
+
+sudir = dir([SU_DADir '*.mat'])
+sidir = dir([Si_DADir '*.mat'])
+
+SU.nonWhiskSR = cell(length(sudir),1);
+SU.whiskSR = cell(length(sudir),1);
+
+for i = 1:length(sudir)
+    load([SU_DADir sudir(i).name])
+    noContactTrials = find(~cellfun(@numel,DA.contactTimesInSamplingPeriod));
+    samplingPeriodLength = cellfun(@length,DA.samplingPeriod(noContactTrials));
+    whiskSamplingPeriodLength = cellfun(@length,DA.whiskSamplingPeriod(noContactTrials));
+    
+    nonWhiskSpikes = sum(DA.spikeCountInSamplingPeriod(noContactTrials))-sum(DA.spikeCountInWhiskSamplingPeriod(noContactTrials));
+    nonWhiskPeriod = sum(samplingPeriodLength)-sum(whiskSamplingPeriodLength);
+    whiskSpikes = sum(DA.spikeCountInWhiskSamplingPeriod(noContactTrials));
+    whiskPeriod = sum(whiskSamplingPeriodLength);
+    
+    SU.nonWhiskSR{SU_nums(i)} = nonWhiskSpikes/nonWhiskPeriod * 1000;
+    SU.whiskSR{SU_nums(i)} = whiskSpikes/whiskPeriod * 1000;
+    
+    
+end
+
+for i = 1:length(sidir)
+    load([Si_DADir sidir(i).name])
+    noContactTrials = find(~cellfun(@numel,DA.contactTimesInSamplingPeriod));
+    samplingPeriodLength = cellfun(@length,DA.samplingPeriod(noContactTrials));
+    whiskSamplingPeriodLength = cellfun(@length,DA.whiskSamplingPeriod(noContactTrials));
+    
+    nonWhiskSpikes = sum(DA.spikeCountInSamplingPeriod(noContactTrials))-sum(DA.spikeCountInWhiskSamplingPeriod(noContactTrials));
+    nonWhiskPeriod = sum(samplingPeriodLength)-sum(whiskSamplingPeriodLength);
+    whiskSpikes = sum(DA.spikeCountInWhiskSamplingPeriod(noContactTrials));
+    whiskPeriod = sum(whiskSamplingPeriodLength);
+    
+    S.nonWhiskSR{Si_nums(i)} = nonWhiskSpikes/nonWhiskPeriod * 1000;
+    S.whiskSR{Si_nums(i)} = whiskSpikes/whiskPeriod * 1000;
+    
+    
+end
+
+%%
+figure(1);clf
+subplot(2,2,1);cla;hold on
+for i = 1:length(SU.nonWhiskSR)
+    try
+        if intersect(SU.PCTH.sharpTouchCells,SU_nums(i))
+            
+            plot(SU.nonWhiskSR{i},SU.whiskSR{i},'r.')
+            
+        else
+            
+            plot(SU.nonWhiskSR{i},SU.whiskSR{i},'k.')
+        end
+        
+    end
+    
+end
+
+for i = 1:length(S.nonWhiskSR)
+    try
+        if intersect(S.PCTH.sharpTouchCells,Si_nums(i))
+            
+            plot(S.nonWhiskSR{i},S.whiskSR{i},'ro')
+            
+        else
+            
+            plot(S.nonWhiskSR{i},S.whiskSR{i},'ko')
+        end
+        
+    end
+    
+end
+
+plot([0 100],[0 100],'k')
+subplot(2,2,2);cla;hold on
+for i = 1:length(SU.nonWhiskSR)
+    try
+        if intersect(SU.PCTH.sharpTouchCells,SU_nums(i))
+            
+            plot(SU.nonWhiskSR{i},SU.whiskSR{i},'r.')
+            
+        else
+            
+            plot(SU.nonWhiskSR{i},SU.whiskSR{i},'k.')
+        end
+    end
+    
+end
+for i = 1:length(S.nonWhiskSR)
+    try
+        if intersect(S.PCTH.sharpTouchCells,Si_nums(i))
+            
+            plot(S.nonWhiskSR{i},S.whiskSR{i},'ro')
+            
+        else
+            
+            plot(S.nonWhiskSR{i},S.whiskSR{i},'ko')
+        end
+        
+    end
+    
+end
+
+plot([0 5],[0 5],'k')
+axis([0 5 0 5])

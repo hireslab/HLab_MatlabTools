@@ -1,0 +1,12 @@
+baseDir = 'Z:\users\Andrew\Whisker Project\SingleUnit\'
+
+for k = 28:53
+   load([baseDir, 'ConTA\' SU.contactsArrayName{k}])
+   load([baseDir, 'SweepArrays\' SU.sweepArrayName{k}])
+   load([baseDir, 'TrialArrays\' SU.trialArrayName{k}])
+  
+    
+    meanLFP{k} = buildContactAlignedLFP(T, contacts, s);
+    k
+    
+end

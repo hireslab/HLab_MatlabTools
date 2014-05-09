@@ -1,0 +1,13 @@
+mean(cellfun(@(x)numel(x.segmentInds{1}<1500)/2,contacts([find(T.missTrialInds) find(T.hitTrialInds)] )))
+
+figure(5);cla;hold on
+plot(T.trials{29}.whiskerTrial.time{1},T.trials{29}.whiskerTrial.thetaAtBase{1}+70,'k.-')
+plot(T.trials{29}.whiskerTrial.time{1}(contacts{29}.contactInds{1}),T.trials{29}.whiskerTrial.thetaAtBase{1}(contacts{29}.contactInds{1})+70,'r.')
+plot(T.trials{30}.whiskerTrial.time{1},T.trials{30}.whiskerTrial.thetaAtBase{1},'k.-')
+plot(T.trials{30}.whiskerTrial.time{1}(contacts{30}.contactInds{1}),T.trials{30}.whiskerTrial.thetaAtBase{1}(contacts{30}.contactInds{1}),'r.')
+text(.1,100,'Hit')
+text(.1,45,'Correct Rejection')
+plot(repmat(T.trials{29}.spikesTrial.spikeTimes /10000,1,2)',repmat([100 105],length(T.trials{29}.spikesTrial.spikeTimes),1)','k-','linewidth',1)
+plot(repmat(T.trials{30}.spikesTrial.spikeTimes /10000,1,2)',repmat([35 40],length(T.trials{30}.spikesTrial.spikeTimes),1)','k-','linewidth',1)
+plot(repmat(T.trials{29}.beamBreakTimes,1,2)',repmat([95],length(T.trials{29}.beamBreakTimes),1)','*m','linewidth',1)
+plot([.677 3.61],[115 115],'color',[.6 .6 .6],'linewidth',5)

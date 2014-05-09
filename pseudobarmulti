@@ -1,0 +1,86 @@
+motorPosition=cellfun(@(x)x.motorPosition,b.trials);
+motorPosition(b.trialNums)=motorPosition;
+
+% go is a matrix of bar positions
+
+dirTrialNums=[];
+go1=zeros(4500,3);
+go1(:,1)=0:4499;
+go1(:,2)=286; % center bar x pixel
+go1(:,3)=24; % center bar y pixel
+
+go2=zeros(4500,3);
+go2(:,1)=0:4499;
+go2(:,2)=285; % center bar x pixel
+go2(:,3)=83; % center bar y pixel
+
+go3=zeros(4500,3);
+go3(:,1)=0:4499;
+go3(:,2)=283; % center bar x pixel
+go3(:,3)=142; % center bar y pixel
+
+go4=zeros(4500,3);
+go4(:,1)=0:4499;
+go4(:,2)=281; % center bar x pixel
+go4(:,3)=201; % center bar y pixel
+
+nogo=zeros(4500,3);
+nogo(:,1)=0:4499;
+nogo(:,2)=275; % center bar x pixel
+nogo(:,3)=349; % center bar y pixel
+
+% must have behavior file loaded
+% saved.SidesSection_previous_sides is a list of trials where go = 114 and
+% nogo = 108
+
+gng=zeros(length(saved.SidesSection_previous_sides),1);
+gng(find(saved.SidesSection_previous_sides==114))=1;
+
+d=dir('*.bar'); % watch out for missing trials
+
+dirTrialNums=[];
+
+for i=1:length(d);
+    dirTrialNums(i)=str2num(d(i).name(29:32)); % extract out the trial number from each bar file present in directory
+end
+
+%trial=[8:304] % the trial number of each trial
+k=26:255;
+for i=1:length(k)   % number of trials
+     
+    if ~isempty(find(dirTrialNums==k(i)))
+    
+        if gng(k(i))==1  % gng is a vector of all trials in a session where a go trial is a 1 and a no-go trial is a 0
+            gom=go;
+            gom(:,3)=gom(:,3);
+                fid=fopen(d(find(dirTrialNums==k(i))).name, 'wt')
+                fprintf(fid, '%u %u %u \n', gom')
+            fclose(fid)
+
+
+        else
+            nogom=nogo;
+            nogom(:,3)=nogom(:,3);
+                fid=fopen(d(find(dirTrialNums==k(i))).name, 'wt')
+                fprintf(fid, '%u %u %u \n', nogom')
+            fclose(fid)
+        end
+    else
+        sprintf(strcat('Bar file for trial #', num2str(k(i)), ' is missing, skipping...'))
+    end
+end
+%% Include Files creation
+
+d=dir('*.measurements'); % watch out for missing trials
+dirTrialNums=[];
+trialNums=[26:215 217:255];  % enter which trial nums to use here
+includef=cell(length(trialNums),1);
+
+for i=1:length(d);
+    dirTrialNums(i)=str2num(d(i).name(27:30)); % extract out the trial number from each bar file present in directory
+end
+
+for i=[1:length(trialNums)];
+    includef{i}=d(find(dirTrialNums==trialNums(i))).name(1:48);
+end
+

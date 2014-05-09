@@ -1,0 +1,36 @@
+Si_ConDir = ('Z:\Users\Andrew\Whisker Project\Silicon\ConTA\')
+Si_TDir =   ('Z:\Users\Andrew\Whisker Project\Silicon\CTA\')
+Si_CADir = ('Z:\Users\Andrew\Whisker Project\Silicon\CellAnalysisArrays\')
+savedir = 'Z:\users\Andrew\Whisker Project\Silicon\Figures\PhaseSR\'
+
+Snums = 15
+for cellNum = 1:length(Snums);
+    if ~strcmp( S.trialArrayName{Snums(cellNum)}(5:17), T.sessionName(4:16))
+        display(['Loading '  S.trialArrayName{Snums(cellNum)}])
+        load([Si_TDir S.trialArrayName{Snums(cellNum)}])
+        load([Si_ConDir S.contactsArrayName{Snums(cellNum)}]);
+    end
+    clustInd = find(T.cellNum == S.clust{Snums(cellNum)} & T.shankNum==S.shank{Snums(cellNum)});
+
+    load([Si_CADir S.filename{Snums(cellNum)}])
+
+    figure(2);clf;hold on
+        
+    cind = {};
+    for i = intersect(find(cellfun(@(x)~isempty(x),CA.phase)),find(cellfun(@(x)x.shanksTrial.clustData{clustInd}.useFlag ==1,T.trials)))
+        
+        for j = contactNumbers
+            if size(contacts{i}.segmentInds{1},1)>=j
+                if T.trials{i}.whiskerTrial.time{1}(contacts{i}.segmentInds{1}(j,1)) <= min([T.trials{i}.answerLickTime 2.5]);
+               
+               [~,cind{i}(j),~] = intersect(CA.time{i}, T.trials{i}.whiskerTrial.time{1}(contacts{i}.segmentInds{1}(j,1)));
+               plot(j,CA.phase{i}(cind{i}(j)),'ko') 
+               
+                end
+            end
+        end
+    end
+        
+
+
+end

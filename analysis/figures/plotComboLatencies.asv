@@ -1,0 +1,25 @@
+%% plot latencies
+printdir = 'Z:\users\Andrew\Whisker Project\Figures\'
+
+figure(2);cla;hold on
+for i =1:length(distance)-9
+plot(distance(i)+(rand-.5)/10,latency(i),'bo')
+end
+
+for i =length(distance)-9:length(distance)
+plot(distance(i)+(rand-.5)/100,latency(i),'ro')
+end
+
+%%
+
+[latP latS] = polyfit(distance,latency,1)
+x = 0:.1:.8
+plot(x,polyval(latP,x),'k')
+
+text(.02,33,'SiProbe', 'color','b')
+text(.02,31,'Cell Attached', 'color','r')
+xlabel('Distance from C2 center (mm)')
+ylabel('Modal Latency (ms)')
+
+print(gcf, '-depsc', [printdir 'ComboLatencies'])% T.mouseName '_' T.sessionName])
+

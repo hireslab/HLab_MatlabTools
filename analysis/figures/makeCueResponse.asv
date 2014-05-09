@@ -1,0 +1,15 @@
+for i =1:53
+    for j = 1:2
+        cueResponse.poleInBR{i,j} = mean(SU.poleInHist{i,j}(1:8));
+        cueResponse.poleInBRstd{i,j} = std(SU.poleInHist{i,j}(1:8));
+        cueResponse.poleInCRmean{i,j} = mean(SU.poleInHist{i,j}(10:16));
+        cueResponse.poleInCRstd{i,j} = std(SU.poleInHist{i,j}(9:16));
+        cueResponse.poleInCRpeak{i,j} = max(SU.poleInHist{i,j}(9:16));
+        cueResponse.poleOutBR{i,j} = mean(SU.poleOutHist{i,j}(1:8));
+        cueResponse.poleOutBRstd{i,j} = std(SU.poleOutHist{i,j}(1:8));
+        cueResponse.poleOutCRmean{i,j} = mean(SU.poleOutHist{i,j}(9:16));
+        cueResponse.poleOutCRstd{i,j} = std(SU.poleOutHist{i,j}(9:16));
+        cueResponse.poleOutCRpeak{i,j} = max(SU.poleOutHist{i,j}(9:16));
+
+    end
+end

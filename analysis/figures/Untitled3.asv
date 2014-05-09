@@ -1,0 +1,5 @@
+Snums_L4  = intersect(find([S.dist{:}] < .250), find(cellfun(@(x)x(3),S.recordingLocation) > .418 & cellfun(@(x)x(3),S.recordingLocation) < .588));
+SUnums_L4  = intersect(find([SU.distance{:}] < .250), find(cellfun(@(x)x(3),SU.recordingLocation) < -.418 & cellfun(@(x)x(3),SU.recordingLocation) > -.588));
+
+DA.contactsInSamplingPeriod = zeros(size(DA.spikeCountInSamplingPeriod))
+for i = 1:length(DA.contact
