@@ -96,16 +96,18 @@ if nargin <4
     set(h_b,'Color',[1 0 1]);
     
     % Setup pushbuttons
-    icon_del   = imread('delete.tif');
-    icon_add   = imread('add.png');
-    icon_right = imread('arrow-right.png');
-    icon_left  = imread('arrow-left.png');
-    icon_recalc= imread('refresh.png');
-    icon_save  = imread('save.png');
-    icon_float = imread('floatingBaseline.tif');
+    icon_del    = imread('delete-icon.tif');
+    icon_add    = imread('add.png');
+    icon_right  = imread('arrow-right.png');
+    icon_left   = imread('arrow-left.png');
+    icon_recalc = imread('refresh.png');
+    icon_save   = imread('save.png');
+    icon_float  = imread('floatingBaseline.tif');
     icon_floatOff = imread('floatingBaselineOff.tif');
     icon_zoomIn = imread('arrow-down.png');
-    icon_zoomOut  = imread('arrow-up.png');
+    icon_zoomOut= imread('arrow-up.png');
+    icon_exclude = imread('arrow-up.png');
+    icon_video  = imread('video_camera.png');
     
     bbutton = uipushtool(ht,'CData',icon_left,'TooltipString','Back');
     fbutton = uipushtool(ht,'CData',icon_right,'TooltipString','Forward');
@@ -132,8 +134,8 @@ if nargin <4
     set(floatToggle,'OffCallback', ['trialContactBrowser(' params.arrayname ',' params.contactsname ', params,''floatOff'')'])
     set(zoomToggle,'OnCallback',   ['trialContactBrowser(' params.arrayname ',' params.contactsname ', params,''zoomOut'')'])
     set(zoomToggle,'OffCallback',  ['trialContactBrowser(' params.arrayname ',' params.contactsname ', params,''zoomIn'')'])
-    set(zoomToggle,'OnCallback',   ['trialContactBrowser(' params.arrayname ',' params.contactsname ', params,''videoOn'')'])
-    set(zoomToggle,'OffCallback',  ['trialContactBrowser(' params.arrayname ',' params.contactsname ', params,''videoOff'')'])   
+    set(videoToggle,'OnCallback',  ['trialContactBrowser(' params.arrayname ',' params.contactsname ', params,''videoOn'')'])
+    set(videoToggle,'OffCallback', ['trialContactBrowser(' params.arrayname ',' params.contactsname ', params,''videoOff'')'])   
     
     % Setup menus
     m1=uimenu(hParamBrowserGui,'Label','Time Period','Separator','on');
@@ -391,6 +393,13 @@ else
             case 'fit'
                 params.summarize = 'fit'
                 
+            case 'videoOn'
+                params.showVideo = 1
+                
+            case 'videoOff'
+                params.showVideo = 0
+                
+                
             otherwise
                 error('Invalid string argument.')
         end
@@ -569,7 +578,7 @@ else
         if params.zoomOut
             set(gca,'XLim',[.5 5],'YLim',[-.5 8]);
         else
-            set(gca,'XLim',[.5 3.5],'YLim',[-.3 .4]);
+            set(gca,'XLim',[.5 3.5],'YLim',[-.3 .5]);
             
         end
     else

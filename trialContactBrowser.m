@@ -96,24 +96,27 @@ if nargin <4
     set(h_b,'Color',[1 0 1]);
     
     % Setup pushbuttons
-    icon_del   = imread('delete.tif');
-    icon_add   = imread('add.png');
-    icon_right = imread('arrow-right.png');
-    icon_left  = imread('arrow-left.png');
-    icon_recalc= imread('refresh.png');
-    icon_save  = imread('save.png');
-    icon_float = imread('floatingBaseline.tif');
+    icon_del    = imread('delete.tif');
+    icon_add    = imread('add.png');
+    icon_right  = imread('arrow-right.png');
+    icon_left   = imread('arrow-left.png');
+    icon_recalc = imread('refresh.png');
+    icon_save   = imread('save.png');
+    icon_float  = imread('floatingBaseline.tif');
     icon_floatOff = imread('floatingBaselineOff.tif');
     icon_zoomIn = imread('arrow-down.png');
-    icon_zoomOut  = imread('arrow-up.png');
+    icon_zoomOut= imread('arrow-up.png');
+    icon_exclude = imread('arrow-up.png');
+    icon_video  = imread('video_camera.png');
     
     bbutton = uipushtool(ht,'CData',icon_left,'TooltipString','Back');
     fbutton = uipushtool(ht,'CData',icon_right,'TooltipString','Forward');
     abutton = uipushtool(ht,'CData',icon_add,'TooltipString','Add Contact','Separator','on');
     dbutton = uipushtool(ht,'CData',icon_del,'TooltipString','Delete Contact');
     rbutton = uipushtool(ht,'CData',icon_recalc,'TooltipString','Recalculate Contact Dependents');
+    xbutton = uipushtool(ht,'CData',icon_exclude,'TooltipString','Flag trial for exclusion');
     sbutton = uipushtool(ht,'CData',icon_save,'TooltipString','Save Contacts and Parameters','Separator','on');
-    
+
     floatToggle = uitoggletool(ht,'CData',icon_floatOff, 'TooltipString', 'Toggle PreContact Baseline Correction')
     zoomToggle  = uitoggletool(ht, 'CData',icon_zoomOut,   'TooltipString', 'Toggle Zoom Level')
     videoToggle = uitoggletool(ht, 'CData',icon_video,   'TooltipString', 'Toggle Zoom Level')
@@ -132,8 +135,8 @@ if nargin <4
     set(floatToggle,'OffCallback', ['trialContactBrowser(' params.arrayname ',' params.contactsname ', params,''floatOff'')'])
     set(zoomToggle,'OnCallback',   ['trialContactBrowser(' params.arrayname ',' params.contactsname ', params,''zoomOut'')'])
     set(zoomToggle,'OffCallback',  ['trialContactBrowser(' params.arrayname ',' params.contactsname ', params,''zoomIn'')'])
-    set(zoomToggle,'OnCallback',   ['trialContactBrowser(' params.arrayname ',' params.contactsname ', params,''videoOn'')'])
-    set(zoomToggle,'OffCallback',  ['trialContactBrowser(' params.arrayname ',' params.contactsname ', params,''videoOff'')'])   
+    set(videoToggle,'OnCallback',  ['trialContactBrowser(' params.arrayname ',' params.contactsname ', params,''videoOn'')'])
+    set(videoToggle,'OffCallback', ['trialContactBrowser(' params.arrayname ',' params.contactsname ', params,''videoOff'')'])   
     
     % Setup menus
     m1=uimenu(hParamBrowserGui,'Label','Time Period','Separator','on');
@@ -391,6 +394,13 @@ else
             case 'fit'
                 params.summarize = 'fit'
                 
+            case 'videoOn'
+                params.showVideo = 1
+                
+            case 'videoOff'
+                params.showVideo = 0
+                
+                
             otherwise
                 error('Invalid string argument.')
         end
@@ -522,7 +532,7 @@ else
     tmax=max(cW.time{1});
     
     % Plot contact detection parameters
-    subplot(4,3,[3 6]);hold off;
+    hs_2 = subplot(4,3,[3 6]);hold off;
     plot(x1,y1,'.k','Tag','t_cvd'); hold on
     axis([min(x1)-.02 max(x1)+.02 min(y1)-.3 max(y1)+1])
     
@@ -554,7 +564,7 @@ else
     %    text(.1,.1, ['\fontsize{10}' 'Location : ' num2str(array.depth) ' (um)' ' ' array.recordingLocation]) ;
     
     % Distance to pole center
-    subplot(4,3,[1 2  4 5]);
+    hs_1 = subplot(4,3,[1 2  4 5]);
     hold off;
     plot(cW.time{1},cW.distanceToPoleCenter{1},'.-k','Tag','t_d')
     hold on
@@ -569,7 +579,7 @@ else
         if params.zoomOut
             set(gca,'XLim',[.5 5],'YLim',[-.5 8]);
         else
-            set(gca,'XLim',[.5 3.5],'YLim',[-.3 .4]);
+            set(gca,'XLim',[.5 3.5],'YLim',[-.3 .5]);
             
         end
     else
@@ -577,7 +587,7 @@ else
         
     end
     % Curvature
-    subplot(4,3,[7 8]);
+    hs_3 = subplot(4,3,[7 8]);
     hold off;
     set(gca,'XLim',[-.5 tmax]);
     
@@ -595,11 +605,12 @@ else
     M0combo(abs(M0combo)>1e-7)=NaN;
     M0combo(cind)=cW.M0{1}(cind);
     
-    subplot(4,3,[10 11]);
+    hs_4 = subplot(4,3,[10 11]);
     cla;hold on
-    set(gca,'XLim',[-.5 tmax],'YLim', [-5 5]*1e-7,'Color','k');
+    set(gca,'XLim',[0 tmax],'YLim', [-5 5]*1e-7,'Color','k');
     title(strcat('Forces associated with trial #',num2str(params.trialNums(params.sweepNum))))
     
+    linkaxes([hs_1 hs_3 hs_4],'x');
     
     if ~isfield(params,'floatingBaseline')
         plot(array.trials{params.sweepNum}.whiskerTrial.time{1},contacts{params.sweepNum}.M0combo{1},'-w.','MarkerSize',6)
