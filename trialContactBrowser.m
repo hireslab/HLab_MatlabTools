@@ -106,7 +106,7 @@ if nargin <4
     icon_floatOff = imread('floatingBaselineOff.tif');
     icon_zoomIn = imread('arrow-down.png');
     icon_zoomOut= imread('arrow-up.png');
-    icon_exclude = imread('arrow-up.png');
+    icon_exclude = imread('red_flag_16.png');
     icon_video  = imread('video_camera.png');
     
     bbutton = uipushtool(ht,'CData',icon_left,'TooltipString','Back');
@@ -114,12 +114,13 @@ if nargin <4
     abutton = uipushtool(ht,'CData',icon_add,'TooltipString','Add Contact','Separator','on');
     dbutton = uipushtool(ht,'CData',icon_del,'TooltipString','Delete Contact');
     rbutton = uipushtool(ht,'CData',icon_recalc,'TooltipString','Recalculate Contact Dependents');
-    xbutton = uipushtool(ht,'CData',icon_exclude,'TooltipString','Flag trial for exclusion');
+    flagToggle = uitoggletool(ht,'CData',icon_exclude,'TooltipString','Flag trial for exclusion');
+    
     sbutton = uipushtool(ht,'CData',icon_save,'TooltipString','Save Contacts and Parameters','Separator','on');
-
+    
     floatToggle = uitoggletool(ht,'CData',icon_floatOff, 'TooltipString', 'Toggle PreContact Baseline Correction')
     zoomToggle  = uitoggletool(ht, 'CData',icon_zoomOut,   'TooltipString', 'Toggle Zoom Level')
-    videoToggle = uitoggletool(ht, 'CData',icon_video,   'TooltipString', 'Toggle Zoom Level')
+    vbutton = uipushtool(ht, 'CData',icon_video,   'TooltipString', 'Toggle Zoom Level')
     
     
     
@@ -130,13 +131,14 @@ if nargin <4
     set(dbutton,'ClickedCallback',['trialContactBrowser(' params.arrayname ',' params.contactsname ', params,''del'')'])
     set(rbutton,'ClickedCallback',['trialContactBrowser(' params.arrayname ',' params.contactsname ', params,''recalc'')'])
     set(sbutton,'ClickedCallback',['trialContactBrowser(' params.arrayname ',' params.contactsname ', params,''save'')'])
-    
+    set(vbutton,'ClickedCallback',['trialContactBrowser(' params.arrayname ',' params.contactsname ', params,''videoOn'')'])
+        
+    set(flagToggle,'OnCallback',   ['trialContactBrowser(' params.arrayname ',' params.contactsname ', params,''flagOn'')'])
+    set(flagToggle,'OffCallback',  ['trialContactBrowser(' params.arrayname ',' params.contactsname ', params,''flagOff'')'])
     set(floatToggle,'OnCallback',  ['trialContactBrowser(' params.arrayname ',' params.contactsname ', params,''floatOn'')'])
     set(floatToggle,'OffCallback', ['trialContactBrowser(' params.arrayname ',' params.contactsname ', params,''floatOff'')'])
     set(zoomToggle,'OnCallback',   ['trialContactBrowser(' params.arrayname ',' params.contactsname ', params,''zoomOut'')'])
     set(zoomToggle,'OffCallback',  ['trialContactBrowser(' params.arrayname ',' params.contactsname ', params,''zoomIn'')'])
-    set(videoToggle,'OnCallback',  ['trialContactBrowser(' params.arrayname ',' params.contactsname ', params,''videoOn'')'])
-    set(videoToggle,'OffCallback', ['trialContactBrowser(' params.arrayname ',' params.contactsname ', params,''videoOff'')'])   
     
     % Setup menus
     m1=uimenu(hParamBrowserGui,'Label','Time Period','Separator','on');
@@ -178,6 +180,9 @@ else
     if isempty(params) % Initial call to this method has argument
         params = struct('sweepNum',find(cellfun(@(x) ~isempty(x.whiskerTrial),array.trials),1),'trialList',params.trialNums(cellfun(@(x) ~isempty(x.whiskerTrial),T.trials)),'displayType','all');
     end
+    
+    
+    
     for j = 1:length(varargin);
         argString = varargin{j};
         switch argString
@@ -212,6 +217,8 @@ else
                     addContact(toAdd);
                 end
                 contacts = getappdata(getappdata(0,'hParamBrowserGui'),'contacts');
+                params.xlim =  get(subplot(4,3,[1 2  4 5]),'xlim');
+                params.ylim =  get(subplot(4,3,[1 2  4 5]),'ylim');
                 
                 
             case 'del'
@@ -233,12 +240,20 @@ else
                 end
                 
                 contacts = getappdata(getappdata(0,'hParamBrowserGui'),'contacts');
-                
+                params.xlim =  get(subplot(4,3,[1 2  4 5]),'xlim');
+                params.ylim =  get(subplot(4,3,[1 2  4 5]),'ylim');
                 
             case 'recalc'
                 [contacts params] = autoContactAnalyzerSi(array, params, contacts, 'recalc');
                 set(0,'CurrentFigure',hParamBrowserGui);
                 
+            case 'flagOn'
+                contacts{params.sweepNum}.passiveTouch = 1;
+                setappdata(hParamBrowserGui,'contacts', contacts);
+                
+            case 'flagOff'
+                contacts{params.sweepNum}.passiveTouch = 0;
+                setappdata(hParamBrowserGui,'contacts', contacts);
                 
             case 'floatOn'
                 
@@ -248,11 +263,11 @@ else
                 
                 params.floatingBaseline = 1;
                 set(0,'CurrentFigure',hParamBrowserGui);
-
+                
             case 'floatOff'
                 params.floatingBaseline = 0;
-            case 'zoomOut'
                 
+            case 'zoomOut'
                 
                 params.zoomOut = 1;
                 
@@ -262,9 +277,9 @@ else
             case 'save'
                 assignin('base','contacts',contacts);
                 assignin('base','params',params);
-                 directoryname = uigetdir;
-              %  save(['Z:\users\Karel\_DATA\S1_singleunit\ConTA\ConTA_' array.mouseName '_' array.sessionName], 'contacts', 'params')
-               % save(['/Volumes/svoboda/users/Andrew/Whisker Project/SingleUnit/ConTA/ConTA_' array.mouseName '_' array.sessionName], 'contacts', 'params')
+                directoryname = uigetdir;
+                %  save(['Z:\users\Karel\_DATA\S1_singleunit\ConTA\ConTA_' array.mouseName '_' array.sessionName], 'contacts', 'params')
+                % save(['/Volumes/svoboda/users/Andrew/Whisker Project/SingleUnit/ConTA/ConTA_' array.mouseName '_' array.sessionName], 'contacts', 'params')
                 save([directoryname '/ConTA_' array.mouseName '_' array.sessionName], 'contacts', 'params')
                 display('Saved Contacts and Parameters')
                 
@@ -395,10 +410,18 @@ else
                 params.summarize = 'fit'
                 
             case 'videoOn'
-                params.showVideo = 1
-                
-            case 'videoOff'
-                params.showVideo = 0
+                if isempty(getappdata(hParamBrowserGui,'videoDir'))
+                   videoDir = uigetdir;
+                   setappdata(hParamBrowserGui,'videoDir', videoDir);
+                else 
+                                       videoDir = getappdata(hParamBrowserGui,'videoDir');
+
+                   end
+             
+             brushedData = find(get(findobj('Tag','t_d'),'BrushData'));
+             toPlay = round(array.trials{params.sweepNum}.whiskerTrial.time{1}(brushedData)*1000)+1;
+            loadWhiskerVideo(array.trialNums(params.sweepNum), toPlay, videoDir);
+
                 
                 
             otherwise
@@ -406,6 +429,14 @@ else
         end
     end
 end
+
+if isfield(params,'showVideo')
+    if params.showVideo == 1
+        videoDir = getappdata(hParamBrowserGui,'videoDir');
+    loadWhiskerVideo(array.trialNums(params.sweepNum), toPlay, videoDir);
+    end
+end
+
 
 if ~isfield(params,'spikeDataType')
     
@@ -419,6 +450,20 @@ if ~isfield(params,'spikeDataType')
     end
 end
 
+% properly populate flag exclusion toggle state from contacts
+h_flag = findobj(1,'TooltipString','Flag trial for exclusion'); % Get handle for the exclusion flag toggle
+
+if isfield(contacts{params.sweepNum},'passiveTouch')
+    if contacts{params.sweepNum}.passiveTouch == 0
+        set(h_flag,'State','off');
+    else
+        set(h_flag,'State','on');
+    end
+else
+    contacts{params.sweepNum}.passiveTouch = 0;
+    set(h_flag,'State','off');
+end
+setappdata(hParamBrowserGui,'contacts', contacts);
 setappdata(hParamBrowserGui,'params', params);
 
 
@@ -554,7 +599,7 @@ else
     text(.1,.9, ['\fontsize{10}' array.trials{params.sweepNum}.trialOutcome]);
     
     %    text(.1,.9, ['\fontsize{10}' 'Analysis Time Period : ' params.displayType '  ' num2str([params.arbTimes{1} params.arbTimes{2}])]);
-%    text(.1,.8, ['\fontsize{10}' 'Spike Synaptic Offset : ' num2str(params.spikeSynapticOffset) ' (s)']);
+    %    text(.1,.8, ['\fontsize{10}' 'Spike Synaptic Offset : ' num2str(params.spikeSynapticOffset) ' (s)']);
     %    text(.1,.7, ['\fontsize{10}' 'Spike Integration Window : ' num2str(params.spikeRateWindow) ' (s)']);
     %    text(.1,.6, ['\fontsize{10}' 'Bins : ' num2str(params.maxBins) '    N per Bin : ' num2str(round(length(params.framesUsed)/params.maxBins))]);
     text(.1,.5, ['\fontsize{10}' 'Mean Answer Time : ' num2str(params.meanAnswerTime) ' (s)']);
@@ -568,6 +613,7 @@ else
     hold off;
     plot(cW.time{1},cW.distanceToPoleCenter{1},'.-k','Tag','t_d')
     hold on
+    
     set(gca,'XLim',[.5 2],'YLim',[-.25 1]);
     
     plot(cW.time{1}(cind),cW.distanceToPoleCenter{1}(cind),'.r')
@@ -663,13 +709,13 @@ else
         
     end
     
-     % Plot Vm attached spikes if present
+    % Plot Vm attached spikes if present
     
     if strcmp(params.spikeDataType,'Vm')
         
         try
             plot(double(cS.spikeTimes)/cS.sampleRate-array.whiskerTrialTimeOffset,.5e-7+5e-8,'c.')
-           
+            
         end
         
     end
@@ -714,6 +760,64 @@ end
 
 assignin('base','params', params);
 setappdata(hParamBrowserGui,'params', params);
+end
+
+function  r = loadWhiskerVideo(videoNum,toPlay,videoDir)
+poleWindow = [-16:16];
+
+d = dir([videoDir '\*.mp4']);
+find_video = strfind([d(:).name], ['_' sprintf('%04d',videoNum) '_'])
+video_idx = ceil(find_video/length(d(1).name));
+
+bar = load([videoDir filesep d(video_idx).name(1:end-4) '.bar'])
+
+if isempty(toPlay)
+    video = mmread([videoDir filesep d(video_idx).name])
+    barSelected = bar(:,2:3,:);
+
+else
+  
+    video = mmread([videoDir filesep d(video_idx).name],toPlay)
+    barSelected = bar(toPlay,2:3,:);
+end
+
+poleCropVideo = zeros(length(poleWindow),length(poleWindow),length(barSelected));
+
+poleCropVideoCat = [];
+poleCropVideoSub = [];
+for i = 1:length(barSelected)
+    poleCropVideo(:,:,i) = video.frames(i).cdata(barSelected(i,2)+poleWindow,barSelected(i,1)+poleWindow,1);
+end
+for i = 1:length(barSelected)
+    
+poleCropVideoCat = cat(2,poleCropVideoCat,video.frames(i).cdata(barSelected(i,2)+poleWindow,barSelected(i,1)+poleWindow,1));
+poleCropVideoSub = cat(2,poleCropVideoSub, mean(poleCropVideo,3)-poleCropVideo(:,:,i));
+end
+
+figure(5);
+clf
+
+subplot(2,1,1)
+
+colormap(gray(256));
+
+image(poleCropVideoCat);
+axis off
+for i = 1:length(toPlay)
+    text(length(poleWindow)*(i-1),length(poleWindow)/2,num2str((toPlay(i)-1)/1000),'color','y','fontsize',8)
+end
+
+subplot(2,1,2)
+imagesc(poleCropVideoSub);
+axis off
+for i = 1:length(toPlay)
+    text(length(poleWindow)*(i-1),length(poleWindow)/2,num2str((toPlay(i)-1)/1000),'color','y','fontsize',8)
+end
+    display('Hi')
+   figure(1);
+    %video = mmread(sweepNum,videoDir)
+end
+
 
 %% Optional Extra Plotting section
 
