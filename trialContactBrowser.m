@@ -12,7 +12,7 @@
 % have built a contacts array from the trial array already, this is how you
 % want to call the program.
 %
-% Version 0.9 SAH 140220
+% Version 1.0 SAH 140514
 
 function trialContactBrowser(array, contacts, params, varargin)
 if nargin <4
@@ -181,7 +181,8 @@ else
         params = struct('sweepNum',find(cellfun(@(x) ~isempty(x.whiskerTrial),array.trials),1),'trialList',params.trialNums(cellfun(@(x) ~isempty(x.whiskerTrial),T.trials)),'displayType','all');
     end
     
-    
+        hs_1 = subplot(4,3,[1 2  4 5]);
+
     
     for j = 1:length(varargin);
         argString = varargin{j};
@@ -191,12 +192,13 @@ else
                 if params.sweepNum < length(array.trials)
                     params.sweepNum = params.sweepNum + 1;
                 end
-                
+                reset_axes(params)
                 
             case 'last'
                 if params.sweepNum > 1
                     params.sweepNum = params.sweepNum - 1;
                 end
+                reset_axes(params)
                 
             case 'add'
                 
@@ -270,9 +272,11 @@ else
             case 'zoomOut'
                 
                 params.zoomOut = 1;
+                set(hs_1,'XLim',[0 4.5],'YLim',[-.5 8])
                 
             case 'zoomIn'
                 params.zoomOut = 0;
+                set(hs_1,'XLim',[.5 3.5],'YLim',[-.3 .5])
                 
             case 'save'
                 assignin('base','contacts',contacts);
@@ -581,7 +585,7 @@ else
     plot(x1,y1,'.k','Tag','t_cvd'); hold on
     axis([min(x1)-.02 max(x1)+.02 min(y1)-.3 max(y1)+1])
     
-    plot(x2,y2,'.g');
+    plot(x2,y2,'.r');
     title('Contact Parameters')
     axis tight
     xlabel('Curvature (\kappa)')
@@ -610,11 +614,16 @@ else
     
     % Distance to pole center
     hs_1 = subplot(4,3,[1 2  4 5]);
+    current_x = get(hs_1,'xlim');
+    current_y = get(hs_1,'ylim');
+    setappdata(hParamBrowserGui,'current_x',current_x)
+    setappdata(hParamBrowserGui,'current_y',current_y)
+    
     hold off;
     plot(cW.time{1},cW.distanceToPoleCenter{1},'.-k','Tag','t_d')
     hold on
     
-    set(gca,'XLim',[.5 2],'YLim',[-.25 1]);
+   set(gca,'XLim',[.5 2],'YLim',[-.25 1]);
     
     plot(cW.time{1}(cind),cW.distanceToPoleCenter{1}(cind),'.r')
     
@@ -623,7 +632,7 @@ else
     hold on;
     if isfield(params,'zoomOut')
         if params.zoomOut
-            set(gca,'XLim',[.5 5],'YLim',[-.5 8]);
+            set(gca,'XLim',[0 tmax],'YLim',[-.5 8]);
         else
             set(gca,'XLim',[.5 3.5],'YLim',[-.3 .5]);
             
@@ -635,7 +644,7 @@ else
     % Curvature
     hs_3 = subplot(4,3,[7 8]);
     hold off;
-    set(gca,'XLim',[-.5 tmax]);
+    set(gca,'XLim',[0 tmax]);
     
     plot(cW.time{1},cW.deltaKappa{1},'.-k')
     hold on
@@ -654,10 +663,12 @@ else
     hs_4 = subplot(4,3,[10 11]);
     cla;hold on
     set(gca,'XLim',[0 tmax],'YLim', [-5 5]*1e-7,'Color','k');
+%     set(gca,'YLim', [-5 5]*1e-7,'Color','k');
     title(strcat('Forces associated with trial #',num2str(params.trialNums(params.sweepNum))))
     
     linkaxes([hs_1 hs_3 hs_4],'x');
-    
+    set(hs_1,'XLim',current_x,'YLim',current_y);
+ 
     if ~isfield(params,'floatingBaseline')
         plot(array.trials{params.sweepNum}.whiskerTrial.time{1},contacts{params.sweepNum}.M0combo{1},'-w.','MarkerSize',6)
         plot(array.trials{params.sweepNum}.whiskerTrial.time{1}(cind),cW.M0{1}(cind),'r.','MarkerSize',8)
@@ -762,22 +773,27 @@ assignin('base','params', params);
 setappdata(hParamBrowserGui,'params', params);
 end
 
+
 function  r = loadWhiskerVideo(videoNum,toPlay,videoDir)
+% Display rasters of video frames from brushed data
+
+hParamBrowserGui = getappdata(0,'hParamBrowserGui');
+
+
 poleWindow = [-16:16];
 
 d = dir([videoDir '\*.mp4']);
-find_video = strfind([d(:).name], ['_' sprintf('%04d',videoNum) '_'])
+find_video = strfind([d(:).name], ['_' sprintf('%04d',videoNum) '_']);
 video_idx = ceil(find_video/length(d(1).name));
 
-bar = load([videoDir filesep d(video_idx).name(1:end-4) '.bar'])
-
+bar = load([videoDir filesep d(video_idx).name(1:end-4) '.bar']);
 if isempty(toPlay)
-    video = mmread([videoDir filesep d(video_idx).name])
+    video = mmread([videoDir filesep d(video_idx).name]);
     barSelected = bar(:,2:3,:);
 
 else
   
-    video = mmread([videoDir filesep d(video_idx).name],toPlay)
+    video = mmread([videoDir filesep d(video_idx).name],toPlay);
     barSelected = bar(toPlay,2:3,:);
 end
 
@@ -794,7 +810,7 @@ poleCropVideoCat = cat(2,poleCropVideoCat,video.frames(i).cdata(barSelected(i,2)
 poleCropVideoSub = cat(2,poleCropVideoSub, mean(poleCropVideo,3)-poleCropVideo(:,:,i));
 end
 
-figure(5);
+h_f5 = figure(5);
 clf
 
 subplot(2,1,1)
@@ -813,11 +829,31 @@ axis off
 for i = 1:length(toPlay)
     text(length(poleWindow)*(i-1),length(poleWindow)/2,num2str((toPlay(i)-1)/1000),'color','y','fontsize',8)
 end
-    display('Hi')
-   figure(1);
+   figure(hParamBrowserGui);
     %video = mmread(sweepNum,videoDir)
 end
 
+function params = reset_axes(params)
+
+    hParamBrowserGui = getappdata(0,'hParamBrowserGui');
+    params = getappdata(hParamBrowserGui,'params');
+    figure(hParamBrowserGui)
+    hs_1 = subplot(4,3,[1 2  4 5]);
+                
+    params.xlim =  get(subplot(4,3,[1 2  4 5]),'xlim');
+    params.ylim =  get(subplot(4,3,[1 2  4 5]),'ylim');
+    
+    if isfield(params,'zoomOut')
+        if params.zoomOut
+            set(hs_1,'XLim',[0 4.5],'YLim',[-.5 8]);
+        else 
+            set(gca,'XLim',[.5 3.5],'YLim',[-.3 .5]);
+        end
+    else
+        set(gca,'XLim',[.5 3.5],'YLim',[-.3 .5]);
+        
+    end
+end
 
 %% Optional Extra Plotting section
 
