@@ -12,7 +12,7 @@
 % have built a contacts array from the trial array already, this is how you
 % want to call the program.
 %
-% Version 0.9 SAH 140220
+% Version 1.0 SAH 140514
 
 function trialContactBrowser(array, contacts, params, varargin)
 if nargin <4
@@ -773,13 +773,17 @@ assignin('base','params', params);
 setappdata(hParamBrowserGui,'params', params);
 end
 
+
 function  r = loadWhiskerVideo(videoNum,toPlay,videoDir)
+% Display rasters of video frames from brushed data
+
 hParamBrowserGui = getappdata(0,'hParamBrowserGui');
 
+obj = getappdata(hParamBrowserGui);
+contactTimes = obj.array.trials{obj.params.sweepNum}.whiskerTrial.time{1}(obj.contacts{obj.params.sweepNum}.contactInds{1});
 
 poleWindow = [-16:16];
-
-d = dir([videoDir '\*.mp4']);
+ d = dir([videoDir '\*.mp4']);
 find_video = strfind([d(:).name], ['_' sprintf('%04d',videoNum) '_']);
 video_idx = ceil(find_video/length(d(1).name));
 
@@ -807,28 +811,48 @@ poleCropVideoCat = cat(2,poleCropVideoCat,video.frames(i).cdata(barSelected(i,2)
 poleCropVideoSub = cat(2,poleCropVideoSub, mean(poleCropVideo,3)-poleCropVideo(:,:,i));
 end
 
-h_f5 = figure(5);
+h_videofig = figure(5);
 clf
 
 subplot(2,1,1)
 
 colormap(gray(256));
 
-image(poleCropVideoCat);
+h_cropimg = image(poleCropVideoCat);
 axis off
 for i = 1:length(toPlay)
     text(length(poleWindow)*(i-1),length(poleWindow)/2,num2str((toPlay(i)-1)/1000),'color','y','fontsize',8)
 end
 
 subplot(2,1,2)
-imagesc(poleCropVideoSub);
+h_diffimg = imagesc(poleCropVideoSub);
 axis off
 for i = 1:length(toPlay)
     text(length(poleWindow)*(i-1),length(poleWindow)/2,num2str((toPlay(i)-1)/1000),'color','y','fontsize',8)
 end
-    display('Hi')
-   figure(hParamBrowserGui);
+  % figure(hParamBrowserGui);
     %video = mmread(sweepNum,videoDir)
+    
+    [x,y,button] = ginput
+    
+    toAddIdx = floor(x(button == 1)/length(poleWindow))
+    
+    toDelIdx = floor(x(button == 3)/length(poleWindow))
+    
+            if ~isempty(toDelIdx);
+                    delContact(toPlay(toDelIdx));
+            end
+               
+                        if ~isempty(toAddIdx);
+                    delContact(toPlay(toAddIdx));
+                        end
+             
+    setappdata(h_videofig,'h_cropimg',h_cropimg)
+    setappdata(h_videofig,'h_diffimg',h_diffimg)
+    
+    ap5 = getappdata(h_videofig)
+    
+    
 end
 
 function params = reset_axes(params)

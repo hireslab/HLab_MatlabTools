@@ -132,7 +132,7 @@ if nargin <4
     set(rbutton,'ClickedCallback',['trialContactBrowser(' params.arrayname ',' params.contactsname ', params,''recalc'')'])
     set(sbutton,'ClickedCallback',['trialContactBrowser(' params.arrayname ',' params.contactsname ', params,''save'')'])
     set(vbutton,'ClickedCallback',['trialContactBrowser(' params.arrayname ',' params.contactsname ', params,''videoOn'')'])
-        
+    
     set(flagToggle,'OnCallback',   ['trialContactBrowser(' params.arrayname ',' params.contactsname ', params,''flagOn'')'])
     set(flagToggle,'OffCallback',  ['trialContactBrowser(' params.arrayname ',' params.contactsname ', params,''flagOff'')'])
     set(floatToggle,'OnCallback',  ['trialContactBrowser(' params.arrayname ',' params.contactsname ', params,''floatOn'')'])
@@ -181,8 +181,8 @@ else
         params = struct('sweepNum',find(cellfun(@(x) ~isempty(x.whiskerTrial),array.trials),1),'trialList',params.trialNums(cellfun(@(x) ~isempty(x.whiskerTrial),T.trials)),'displayType','all');
     end
     
-        hs_1 = subplot(4,3,[1 2  4 5]);
-
+    hs_1 = subplot(4,3,[1 2  4 5]);
+    
     
     for j = 1:length(varargin);
         argString = varargin{j};
@@ -415,17 +415,18 @@ else
                 
             case 'videoOn'
                 if isempty(getappdata(hParamBrowserGui,'videoDir'))
-                   videoDir = uigetdir;
-                   setappdata(hParamBrowserGui,'videoDir', videoDir);
-                else 
-                                       videoDir = getappdata(hParamBrowserGui,'videoDir');
-
-                   end
-             
-             brushedData = find(get(findobj('Tag','t_d'),'BrushData'));
-             toPlay = round(array.trials{params.sweepNum}.whiskerTrial.time{1}(brushedData)*1000)+1;
-            loadWhiskerVideo(array.trialNums(params.sweepNum), toPlay, videoDir);
-
+                    videoDir = uigetdir;
+                    setappdata(hParamBrowserGui,'videoDir', videoDir);
+                else
+                    videoDir = getappdata(hParamBrowserGui,'videoDir');
+                    
+                end
+                
+                brushedData = find(get(findobj('Tag','t_d'),'BrushData'));
+                toPlay = round(array.trials{params.sweepNum}.whiskerTrial.time{1}(brushedData)*1000)+1;
+                loadWhiskerVideo(array.trialNums(params.sweepNum), toPlay, videoDir);
+                hParamBrowserGui = getappdata(0,'hParamBrowserGui');
+                
                 
                 
             otherwise
@@ -437,7 +438,7 @@ end
 if isfield(params,'showVideo')
     if params.showVideo == 1
         videoDir = getappdata(hParamBrowserGui,'videoDir');
-    loadWhiskerVideo(array.trialNums(params.sweepNum), toPlay, videoDir);
+        loadWhiskerVideo(array.trialNums(params.sweepNum), toPlay, videoDir);
     end
 end
 
@@ -623,7 +624,7 @@ else
     plot(cW.time{1},cW.distanceToPoleCenter{1},'.-k','Tag','t_d')
     hold on
     
-   set(gca,'XLim',[.5 2],'YLim',[-.25 1]);
+    set(gca,'XLim',[.5 2],'YLim',[-.25 1]);
     
     plot(cW.time{1}(cind),cW.distanceToPoleCenter{1}(cind),'.r')
     
@@ -663,12 +664,12 @@ else
     hs_4 = subplot(4,3,[10 11]);
     cla;hold on
     set(gca,'XLim',[0 tmax],'YLim', [-5 5]*1e-7,'Color','k');
-%     set(gca,'YLim', [-5 5]*1e-7,'Color','k');
+    %     set(gca,'YLim', [-5 5]*1e-7,'Color','k');
     title(strcat('Forces associated with trial #',num2str(params.trialNums(params.sweepNum))))
     
     linkaxes([hs_1 hs_3 hs_4],'x');
     set(hs_1,'XLim',current_x,'YLim',current_y);
- 
+    
     if ~isfield(params,'floatingBaseline')
         plot(array.trials{params.sweepNum}.whiskerTrial.time{1},contacts{params.sweepNum}.M0combo{1},'-w.','MarkerSize',6)
         plot(array.trials{params.sweepNum}.whiskerTrial.time{1}(cind),cW.M0{1}(cind),'r.','MarkerSize',8)
@@ -779,9 +780,10 @@ function  r = loadWhiskerVideo(videoNum,toPlay,videoDir)
 
 hParamBrowserGui = getappdata(0,'hParamBrowserGui');
 
+obj = getappdata(hParamBrowserGui);
+contactTimes = obj.array.trials{obj.params.sweepNum}.whiskerTrial.time{1}(obj.contacts{obj.params.sweepNum}.contactInds{1});
 
 poleWindow = [-16:16];
-
 d = dir([videoDir '\*.mp4']);
 find_video = strfind([d(:).name], ['_' sprintf('%04d',videoNum) '_']);
 video_idx = ceil(find_video/length(d(1).name));
@@ -790,9 +792,9 @@ bar = load([videoDir filesep d(video_idx).name(1:end-4) '.bar']);
 if isempty(toPlay)
     video = mmread([videoDir filesep d(video_idx).name]);
     barSelected = bar(:,2:3,:);
-
+    
 else
-  
+    
     video = mmread([videoDir filesep d(video_idx).name],toPlay);
     barSelected = bar(toPlay,2:3,:);
 end
@@ -806,53 +808,74 @@ for i = 1:length(barSelected)
 end
 for i = 1:length(barSelected)
     
-poleCropVideoCat = cat(2,poleCropVideoCat,video.frames(i).cdata(barSelected(i,2)+poleWindow,barSelected(i,1)+poleWindow,1));
-poleCropVideoSub = cat(2,poleCropVideoSub, mean(poleCropVideo,3)-poleCropVideo(:,:,i));
+    poleCropVideoCat = cat(2,poleCropVideoCat,video.frames(i).cdata(barSelected(i,2)+poleWindow,barSelected(i,1)+poleWindow,1));
+    poleCropVideoSub = cat(2,poleCropVideoSub, mean(poleCropVideo,3)-poleCropVideo(:,:,i));
 end
 
-h_f5 = figure(5);
+h_videofig = figure(5);
 clf
 
 subplot(2,1,1)
 
 colormap(gray(256));
 
-image(poleCropVideoCat);
+h_cropimg = image(poleCropVideoCat);
 axis off
 for i = 1:length(toPlay)
     text(length(poleWindow)*(i-1),length(poleWindow)/2,num2str((toPlay(i)-1)/1000),'color','y','fontsize',8)
 end
 
 subplot(2,1,2)
-imagesc(poleCropVideoSub);
+h_diffimg = imagesc(poleCropVideoSub);
 axis off
 for i = 1:length(toPlay)
     text(length(poleWindow)*(i-1),length(poleWindow)/2,num2str((toPlay(i)-1)/1000),'color','y','fontsize',8)
 end
-   figure(hParamBrowserGui);
-    %video = mmread(sweepNum,videoDir)
+% figure(hParamBrowserGui);
+%video = mmread(sweepNum,videoDir)
+
+[x,y,button] = ginput
+
+toAddIdx = ceil(x(button == 1)/length(poleWindow))
+
+toDelIdx = ceil(x(button == 3)/length(poleWindow))
+
+if ~isempty(toDelIdx);
+    delContact(toPlay(toDelIdx));
+end
+
+if ~isempty(toAddIdx);
+    addContact(toPlay(toAddIdx));
+end
+
+setappdata(h_videofig,'h_cropimg',h_cropimg)
+setappdata(h_videofig,'h_diffimg',h_diffimg)
+
+ap5 = getappdata(h_videofig)
+
+figure(hParamBrowserGui);
 end
 
 function params = reset_axes(params)
 
-    hParamBrowserGui = getappdata(0,'hParamBrowserGui');
-    params = getappdata(hParamBrowserGui,'params');
-    figure(hParamBrowserGui)
-    hs_1 = subplot(4,3,[1 2  4 5]);
-                
-    params.xlim =  get(subplot(4,3,[1 2  4 5]),'xlim');
-    params.ylim =  get(subplot(4,3,[1 2  4 5]),'ylim');
-    
-    if isfield(params,'zoomOut')
-        if params.zoomOut
-            set(hs_1,'XLim',[0 4.5],'YLim',[-.5 8]);
-        else 
-            set(gca,'XLim',[.5 3.5],'YLim',[-.3 .5]);
-        end
+hParamBrowserGui = getappdata(0,'hParamBrowserGui');
+params = getappdata(hParamBrowserGui,'params');
+figure(hParamBrowserGui)
+hs_1 = subplot(4,3,[1 2  4 5]);
+
+params.xlim =  get(subplot(4,3,[1 2  4 5]),'xlim');
+params.ylim =  get(subplot(4,3,[1 2  4 5]),'ylim');
+
+if isfield(params,'zoomOut')
+    if params.zoomOut
+        set(hs_1,'XLim',[0 4.5],'YLim',[-.5 8]);
     else
         set(gca,'XLim',[.5 3.5],'YLim',[-.3 .5]);
-        
     end
+else
+    set(gca,'XLim',[.5 3.5],'YLim',[-.3 .5]);
+    
+end
 end
 
 %% Optional Extra Plotting section
