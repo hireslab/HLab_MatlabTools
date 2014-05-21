@@ -421,11 +421,17 @@ else
                     videoDir = getappdata(hParamBrowserGui,'videoDir');
                     
                 end
+                if  isfield(get(findobj('Tag','t_d')),'BrushData');
+                    brushedData = find(get(findobj('Tag','t_d'),'BrushData'));
+                    toPlay = round(array.trials{params.sweepNum}.whiskerTrial.time{1}(brushedData)*1000)+1;
+                    loadWhiskerVideo(array.trialNums(params.sweepNum), toPlay, videoDir);
+                    params = getappdata(hParamBrowserGui,'params');
+                    contacts = getappdata(hParamBrowserGui,'contacts');
+                else 
+                   display('No datapoints found, please brush points before calling video')
+                end
                 
-                brushedData = find(get(findobj('Tag','t_d'),'BrushData'));
-                toPlay = round(array.trials{params.sweepNum}.whiskerTrial.time{1}(brushedData)*1000)+1;
-                loadWhiskerVideo(array.trialNums(params.sweepNum), toPlay, videoDir);
-                hParamBrowserGui = getappdata(0,'hParamBrowserGui');
+
                 
                 
                 
@@ -434,6 +440,7 @@ else
         end
     end
 end
+                hParamBrowserGui = getappdata(0,'hParmBrowserGui');
 
 if isfield(params,'showVideo')
     if params.showVideo == 1
@@ -456,20 +463,20 @@ if ~isfield(params,'spikeDataType')
 end
 
 % properly populate flag exclusion toggle state from contacts
-h_flag = findobj(1,'TooltipString','Flag trial for exclusion'); % Get handle for the exclusion flag toggle
-
-if isfield(contacts{params.sweepNum},'passiveTouch')
-    if contacts{params.sweepNum}.passiveTouch == 0
-        set(h_flag,'State','off');
-    else
-        set(h_flag,'State','on');
-    end
-else
-    contacts{params.sweepNum}.passiveTouch = 0;
-    set(h_flag,'State','off');
-end
-setappdata(hParamBrowserGui,'contacts', contacts);
-setappdata(hParamBrowserGui,'params', params);
+% h_flag = findobj(1,'TooltipString','Flag trial for exclusion'); % Get handle for the exclusion flag toggle
+% 
+% if isfield(contacts{params.sweepNum},'passiveTouch')
+%     if contacts{params.sweepNum}.passiveTouch == 0
+%         set(h_flag,'State','off');
+%     else
+%         set(h_flag,'State','on');
+%     end
+% else
+%     contacts{params.sweepNum}.passiveTouch = 0;
+%     set(h_flag,'State','off');
+% end
+% setappdata(hParamBrowserGui,'contacts', contacts);
+% setappdata(hParamBrowserGui,'params', params);
 
 
 % Shorthand notation
@@ -617,6 +624,7 @@ else
     hs_1 = subplot(4,3,[1 2  4 5]);
     current_x = get(hs_1,'xlim');
     current_y = get(hs_1,'ylim');
+    hParamBrowserGui = getappdata(0,'hParamBrowserGui')
     setappdata(hParamBrowserGui,'current_x',current_x)
     setappdata(hParamBrowserGui,'current_y',current_y)
     
@@ -791,24 +799,36 @@ video_idx = ceil(find_video/length(d(1).name));
 bar = load([videoDir filesep d(video_idx).name(1:end-4) '.bar']);
 if isempty(toPlay)
     video = mmread([videoDir filesep d(video_idx).name]);
-    barSelected = bar(:,2:3,:);
+    barSelected = bar(:,2:3,:)
     
 else
     
     video = mmread([videoDir filesep d(video_idx).name],toPlay);
     barSelected = bar(toPlay,2:3,:);
+    
 end
+
+video.isContact = zeros(length(toPlay),1)
+[~,brushedContactIdx,~] = intersect(toPlay, round(contactTimes*1000)+1);
+video.isContact(brushedContactIdx) = 1;
 
 poleCropVideo = zeros(length(poleWindow),length(poleWindow),length(barSelected));
 
 poleCropVideoCat = [];
 poleCropVideoSub = [];
 for i = 1:length(barSelected)
+        
     poleCropVideo(:,:,i) = video.frames(i).cdata(barSelected(i,2)+poleWindow,barSelected(i,1)+poleWindow,1);
+ 
+
 end
 for i = 1:length(barSelected)
-    
-    poleCropVideoCat = cat(2,poleCropVideoCat,video.frames(i).cdata(barSelected(i,2)+poleWindow,barSelected(i,1)+poleWindow,1));
+        if video.isContact(i) == 0;
+
+    poleCropVideoCat = cat(2,poleCropVideoCat,cat(1,video.frames(i).cdata(barSelected(i,2)+poleWindow,barSelected(i,1)+poleWindow,1),repmat(255,10,length(poleWindow))));
+       else
+    poleCropVideoCat = cat(2,poleCropVideoCat,cat(1,video.frames(i).cdata(barSelected(i,2)+poleWindow,barSelected(i,1)+poleWindow,1),repmat(0,10,length(poleWindow))));
+        end
     poleCropVideoSub = cat(2,poleCropVideoSub, mean(poleCropVideo,3)-poleCropVideo(:,:,i));
 end
 
@@ -824,6 +844,7 @@ axis off
 for i = 1:length(toPlay)
     text(length(poleWindow)*(i-1),length(poleWindow)/2,num2str((toPlay(i)-1)/1000),'color','y','fontsize',8)
 end
+text(0,-2,'Left click to add contact, Right click delete, Enter to save','color','y')
 
 subplot(2,1,2)
 h_diffimg = imagesc(poleCropVideoSub);
@@ -831,14 +852,16 @@ axis off
 for i = 1:length(toPlay)
     text(length(poleWindow)*(i-1),length(poleWindow)/2,num2str((toPlay(i)-1)/1000),'color','y','fontsize',8)
 end
+text(0,-10,'Contact','color','k')
+text(0,-5,'No Contact','color','w')
+
 % figure(hParamBrowserGui);
 %video = mmread(sweepNum,videoDir)
-
 [x,y,button] = ginput
 
-toAddIdx = ceil(x(button == 1)/length(poleWindow))
+toAddIdx = unique(ceil(x(button == 1)/length(poleWindow)));
 
-toDelIdx = ceil(x(button == 3)/length(poleWindow))
+toDelIdx = setdiff(unique(ceil(x(button == 3)/length(poleWindow))),toAddIdx);
 
 if ~isempty(toDelIdx);
     delContact(toPlay(toDelIdx));
