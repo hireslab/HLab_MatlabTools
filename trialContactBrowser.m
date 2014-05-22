@@ -808,7 +808,7 @@ else
     
 end
 
-poleWindow = [-16:16];
+poleWindow = [-30:30];
 video.isContact = zeros(length(toPlay),1)
 [~,brushedContactIdx,~] = intersect(toPlay, round(contactTimes*1000)+1);
 video.isContact(brushedContactIdx) = 1;
@@ -824,7 +824,7 @@ colormap(gray(256));
 h_cropimg = image(poleCropVideoCat);
 axis off
 for i = 1:length(toPlay)
-    text(length(poleWindow)*(i-1),length(poleWindow)/2,num2str((toPlay(i)-1)/1000),'color','y','fontsize',8)
+    text(length(poleWindow)*(i-1),5,num2str((toPlay(i)-1)/1000),'color','y','fontsize',8)
 end
 text(0,-2,'Left click to add contact, Right click delete, Enter to save','color','y')
 
@@ -832,7 +832,7 @@ subplot(2,1,2)
 h_diffimg = imagesc(poleCropVideoSub);
 axis off
 for i = 1:length(toPlay)
-    text(length(poleWindow)*(i-1),length(poleWindow)/2,num2str((toPlay(i)-1)/1000),'color','y','fontsize',8)
+    text(length(poleWindow)*(i-1),5,num2str((toPlay(i)-1)/1000),'color','y','fontsize',8)
 end
 text(0,-10,'Contact','color','k')
 text(0,-5,'No Contact','color','w')
@@ -878,7 +878,7 @@ subplot(2,1,1)
 h_cropimg = image(poleCropVideoCat);
 axis off
 for i = 1:length(toPlay)
-    text(length(poleWindow)*(i-1),length(poleWindow)/2,num2str((toPlay(i)-1)/1000),'color','y','fontsize',8)
+    text(length(poleWindow)*(i-1),5,num2str((toPlay(i)-1)/1000),'color','y','fontsize',8)
 end
 
 
@@ -892,7 +892,6 @@ end
 
 function [poleCropVideoCat poleCropVideoSub] = buildPoleCropVideos(video,barSelected, poleWindow)
 
-poleWindow = [-16:16];
 poleCropVideo = zeros(length(poleWindow),length(poleWindow),length(barSelected));
 poleCropVideoCat = [];
 poleCropVideoSub = [];
