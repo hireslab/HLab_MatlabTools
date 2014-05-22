@@ -844,6 +844,7 @@ axis off
 for i = 1:length(toPlay)
     text(length(poleWindow)*(i-1),length(poleWindow)/2,num2str((toPlay(i)-1)/1000),'color','y','fontsize',8)
 end
+text(0,-2,'Left click to add contact, Right click delete, Enter to save','color','y')
 
 subplot(2,1,2)
 h_diffimg = imagesc(poleCropVideoSub);
@@ -851,14 +852,19 @@ axis off
 for i = 1:length(toPlay)
     text(length(poleWindow)*(i-1),length(poleWindow)/2,num2str((toPlay(i)-1)/1000),'color','y','fontsize',8)
 end
+text(0,-10,'Contact','color','k')
+text(0,-5,'No Contact','color','w')
+
 % figure(hParamBrowserGui);
 %video = mmread(sweepNum,videoDir)
-text(0,0,'Left click to add contact, Right click delete,'color','y')
 [x,y,button] = ginput
 
-toAddIdx = unique(ceil(x(button == 1)/length(poleWindow)));
+toAddTimes = toPlay(unique(ceil(x(button == 1)/length(poleWindow))));
 
-toDelIdx = setdiff(unique(ceil(x(button == 3)/length(poleWindow))),toAddIdx);
+toDelTimes = setdiff(toPlay(unique(ceil(x(button == 3)/length(poleWindow))),toAddTimes);
+
+intersect(round(obj.array.trials{obj.params.sweepNum}.whiskerTrial.time{1}*1000)
+
 
 if ~isempty(toDelIdx);
     delContact(toPlay(toDelIdx));

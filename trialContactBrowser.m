@@ -272,11 +272,11 @@ else
             case 'zoomOut'
                 
                 params.zoomOut = 1;
-                set(hs_1,'XLim',[0 4.5],'YLim',[-.5 8])
+                set(hs_1,'Xlim',[0 4.5],'YLim',[-.5 8])
                 
             case 'zoomIn'
                 params.zoomOut = 0;
-                set(hs_1,'XLim',[.5 3.5],'YLim',[-.3 .5])
+                set(hs_1,'Xlim',[0 4.5],'YLim',[-.3 .5])
                 
             case 'save'
                 assignin('base','contacts',contacts);
@@ -632,7 +632,7 @@ else
     plot(cW.time{1},cW.distanceToPoleCenter{1},'.-k','Tag','t_d')
     hold on
     
-    set(gca,'XLim',[.5 2],'YLim',[-.25 1]);
+%    set(gca,'XLim',[.5 2],'YLim',[-.25 1]);
     
     plot(cW.time{1}(cind),cW.distanceToPoleCenter{1}(cind),'.r')
     
@@ -641,13 +641,13 @@ else
     hold on;
     if isfield(params,'zoomOut')
         if params.zoomOut
-            set(gca,'XLim',[0 tmax],'YLim',[-.5 8]);
+            set(gca,'Xlim',[0 tmax],'YLim',[-.5 8]);
         else
-            set(gca,'XLim',[.5 3.5],'YLim',[-.3 .5]);
+            set(gca,'Xlim',[0 tmax],'YLim',[-.3 .5]);
             
         end
     else
-        set(gca,'XLim',[.5 3.5],'YLim',[-.3 .4]);
+        set(gca,'Xlim',[0 tmax],'YLim',[-.3 .4]);
         
     end
     % Curvature
@@ -791,7 +791,7 @@ hParamBrowserGui = getappdata(0,'hParamBrowserGui');
 obj = getappdata(hParamBrowserGui);
 contactTimes = obj.array.trials{obj.params.sweepNum}.whiskerTrial.time{1}(obj.contacts{obj.params.sweepNum}.contactInds{1});
 
-poleWindow = [-16:16];
+
 d = dir([videoDir '\*.mp4']);
 find_video = strfind([d(:).name], ['_' sprintf('%04d',videoNum) '_']);
 video_idx = ceil(find_video/length(d(1).name));
@@ -808,37 +808,19 @@ else
     
 end
 
+poleWindow = [-16:16];
 video.isContact = zeros(length(toPlay),1)
 [~,brushedContactIdx,~] = intersect(toPlay, round(contactTimes*1000)+1);
 video.isContact(brushedContactIdx) = 1;
 
-poleCropVideo = zeros(length(poleWindow),length(poleWindow),length(barSelected));
 
-poleCropVideoCat = [];
-poleCropVideoSub = [];
-for i = 1:length(barSelected)
-        
-    poleCropVideo(:,:,i) = video.frames(i).cdata(barSelected(i,2)+poleWindow,barSelected(i,1)+poleWindow,1);
- 
-
-end
-for i = 1:length(barSelected)
-        if video.isContact(i) == 0;
-
-    poleCropVideoCat = cat(2,poleCropVideoCat,cat(1,video.frames(i).cdata(barSelected(i,2)+poleWindow,barSelected(i,1)+poleWindow,1),repmat(255,10,length(poleWindow))));
-       else
-    poleCropVideoCat = cat(2,poleCropVideoCat,cat(1,video.frames(i).cdata(barSelected(i,2)+poleWindow,barSelected(i,1)+poleWindow,1),repmat(0,10,length(poleWindow))));
-        end
-    poleCropVideoSub = cat(2,poleCropVideoSub, mean(poleCropVideo,3)-poleCropVideo(:,:,i));
-end
+[poleCropVideoCat poleCropVideoSub] = buildPoleCropVideos(video,barSelected,poleWindow);
 
 h_videofig = figure(5);
 clf
 
 subplot(2,1,1)
-
 colormap(gray(256));
-
 h_cropimg = image(poleCropVideoCat);
 axis off
 for i = 1:length(toPlay)
@@ -859,17 +841,46 @@ text(0,-5,'No Contact','color','w')
 %video = mmread(sweepNum,videoDir)
 [x,y,button] = ginput
 
-toAddIdx = unique(ceil(x(button == 1)/length(poleWindow)));
+toAddSubIdx = unique(ceil(x(button == 1)/length(poleWindow)));
+toDelSubIdx = setdiff(unique(ceil(x(button == 3)/length(poleWindow))),toAddSubIdx);
 
-toDelIdx = setdiff(unique(ceil(x(button == 3)/length(poleWindow))),toAddIdx);
+toAddTimes = toPlay(toAddSubIdx);
+toDelTimes = toPlay(toDelSubIdx);
 
-if ~isempty(toDelIdx);
-    delContact(toPlay(toDelIdx));
-end
+[~, toAddIdx,~] = intersect(round(obj.array.trials{obj.params.sweepNum}.whiskerTrial.time{1}*1000)+1,toAddTimes);
+[~, toDelIdx,~] = intersect(round(obj.array.trials{obj.params.sweepNum}.whiskerTrial.time{1}*1000)+1,toDelTimes);
+
+toAddIdx = toAddIdx';
+toDelIdx = toDelIdx';
+
 
 if ~isempty(toAddIdx);
-    addContact(toPlay(toAddIdx));
+    addContact(toAddIdx);
+    for i = toAddSubIdx
+        video.isContact(i) = 1;
+    end
+ 
 end
+
+if ~isempty(toDelIdx);
+ 
+    delContact(toDelIdx);
+    for i = toDelSubIdx
+        video.isContact(i)= 0;
+    end
+
+end
+
+[poleCropVideoCat poleCropVideoSub] = buildPoleCropVideos(video,barSelected,poleWindow);
+
+figure(h_videofig);
+subplot(2,1,1)
+h_cropimg = image(poleCropVideoCat);
+axis off
+for i = 1:length(toPlay)
+    text(length(poleWindow)*(i-1),length(poleWindow)/2,num2str((toPlay(i)-1)/1000),'color','y','fontsize',8)
+end
+
 
 setappdata(h_videofig,'h_cropimg',h_cropimg)
 setappdata(h_videofig,'h_diffimg',h_diffimg)
@@ -878,6 +889,30 @@ ap5 = getappdata(h_videofig)
 
 figure(hParamBrowserGui);
 end
+
+function [poleCropVideoCat poleCropVideoSub] = buildPoleCropVideos(video,barSelected, poleWindow)
+
+poleWindow = [-16:16];
+poleCropVideo = zeros(length(poleWindow),length(poleWindow),length(barSelected));
+poleCropVideoCat = [];
+poleCropVideoSub = [];
+for i = 1:length(barSelected)
+        
+    poleCropVideo(:,:,i) = video.frames(i).cdata(barSelected(i,2)+poleWindow,barSelected(i,1)+poleWindow,1);
+ 
+
+end
+for i = 1:length(barSelected)
+        if video.isContact(i) == 0;
+
+    poleCropVideoCat = cat(2,poleCropVideoCat,cat(1,video.frames(i).cdata(barSelected(i,2)+poleWindow,barSelected(i,1)+poleWindow,1),repmat(255,10,length(poleWindow))));
+       else
+    poleCropVideoCat = cat(2,poleCropVideoCat,cat(1,video.frames(i).cdata(barSelected(i,2)+poleWindow,barSelected(i,1)+poleWindow,1),repmat(0,10,length(poleWindow))));
+        end
+    poleCropVideoSub = cat(2,poleCropVideoSub, mean(poleCropVideo,3)-poleCropVideo(:,:,i));
+end
+end
+
 
 function params = reset_axes(params)
 
@@ -891,12 +926,12 @@ params.ylim =  get(subplot(4,3,[1 2  4 5]),'ylim');
 
 if isfield(params,'zoomOut')
     if params.zoomOut
-        set(hs_1,'XLim',[0 4.5],'YLim',[-.5 8]);
+        set(hs_1,'YLim',[-.5 8]);
     else
-        set(gca,'XLim',[.5 3.5],'YLim',[-.3 .5]);
+        set(gca,'YLim',[-.3 .5]);
     end
 else
-    set(gca,'XLim',[.5 3.5],'YLim',[-.3 .5]);
+    set(gca,'YLim',[-.3 .5]);
     
 end
 end

@@ -75,9 +75,9 @@ if ~isfield(contacts{whiskerTIN},'manualDel')
 end
 
 if isempty(contacts{whiskerTIN}.manualAdd{1});
-   contacts{whiskerTIN}.manualAdd{1} = toAdd;
+   contacts{whiskerTIN}.manualAdd{1} = toAdd(:)';
 else
-contacts{whiskerTIN}.manualAdd{1}   = unique(cat(2,toAdd,contacts{whiskerTIN}.manualAdd{1}));
+contacts{whiskerTIN}.manualAdd{1}   = unique(cat(2,toAdd(:)',contacts{whiskerTIN}.manualAdd{1}(:)'));
 end
 
 contacts{whiskerTIN}.manualDel{1}   = setdiff(contacts{whiskerTIN}.manualDel{1},contacts{whiskerTIN}.manualAdd{1});

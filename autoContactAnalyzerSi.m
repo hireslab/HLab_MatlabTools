@@ -88,12 +88,12 @@ if nargin == 3
 
     for i = addFieldIdx
         contacts{i}.manualAdd{1} = addContactInds{i};
-        contacts{i}.contactInds{1} = unique(cat(2,contacts{i}.manualAdd{1},contacts{i}.contactInds{1}));
+        contacts{i}.contactInds{1} = unique(cat(2,contacts{i}.manualAdd{1}(:)',contacts{i}.contactInds{1}(:)'));
     end
 
     for i = delFieldIdx
         contacts{i}.manualDel{1} = delContactInds{i};
-        contacts{i}.contactInds{1} = unique(cat(2,contacts{i}.manualDel{1},contacts{i}.contactInds{1}));
+        contacts{i}.contactInds{1} = unique(cat(2,contacts{i}.manualDel{1}(:)',contacts{i}.contactInds{1}(:)'));
 
     end
 
