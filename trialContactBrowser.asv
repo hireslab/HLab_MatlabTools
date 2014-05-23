@@ -895,6 +895,14 @@ function [poleCropVideoCat poleCropVideoSub] = buildPoleCropVideos(video,barSele
 poleCropVideo = zeros(length(poleWindow),length(poleWindow),length(barSelected));
 poleCropVideoCat = [];
 poleCropVideoSub = [];
+
+% Adjust cr
+if size(video.frames(i).cdata,2) <  max(barSelected(i,1)+poleWindow) || size(video.frames(i).cdata,1) < max(barSelected(i,2)+poleWindow);
+    poleWindow = poleWindow - max([max(barSelected(i,1)+poleWindow)-size(video.frames(i).cdata,2)  max(barSelected(i,2)+poleWindow)-size(video.frames(i).cdata,1)]);
+end
+        
+    
+
 for i = 1:length(barSelected)
         
     poleCropVideo(:,:,i) = video.frames(i).cdata(barSelected(i,2)+poleWindow,barSelected(i,1)+poleWindow,1);

@@ -895,6 +895,14 @@ function [poleCropVideoCat poleCropVideoSub] = buildPoleCropVideos(video,barSele
 poleCropVideo = zeros(length(poleWindow),length(poleWindow),length(barSelected));
 poleCropVideoCat = [];
 poleCropVideoSub = [];
+
+% Adjust cropping window if it extends beyond video border
+if size(video.frames(1).cdata,2) <  max(barSelected(1,1)+poleWindow) || size(video.frames(1).cdata,1) < max(barSelected(1,2)+poleWindow);
+    poleWindow = poleWindow - max([max(barSelected(1,1)+poleWindow)-size(video.frames(1).cdata,2)  max(barSelected(1,2)+poleWindow)-size(video.frames(1).cdata,1)]);
+end
+        
+    
+
 for i = 1:length(barSelected)
         
     poleCropVideo(:,:,i) = video.frames(i).cdata(barSelected(i,2)+poleWindow,barSelected(i,1)+poleWindow,1);
