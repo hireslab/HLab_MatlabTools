@@ -146,7 +146,7 @@ for j=1:2
         % Recalculate mean contact curvature with refined contacts
         meanContactCurve(k)=nanmean(kappa{k}(contacts{k}.contactInds{1}));
         contacts{k}.trialContactType=trialContactType(k);
-        
+        contacts{k}.contactInds{1}=contacts{k}.contactInds{1}(:)';
     end
 end
 
