@@ -784,7 +784,7 @@ obj = getappdata(hParamBrowserGui);
 contactTimes = obj.array.trials{obj.params.sweepNum}.whiskerTrial.time{1}(obj.contacts{obj.params.sweepNum}.contactInds{1});
 
 poleWindow = [-16:16];
-d = dir([videoDir '\*.mp4']);
+d = dir([videoDir filesep '*.mp4']);
 find_video = strfind([d(:).name], ['_' sprintf('%04d',videoNum) '_']);
 video_idx = ceil(find_video/length(d(1).name));
 
