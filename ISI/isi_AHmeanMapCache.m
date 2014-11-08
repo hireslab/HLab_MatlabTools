@@ -47,7 +47,7 @@ if nfiles < 1
 end
 
 
-stimPeriod = 1:4; basePeriod = 11:20; chunksize = 20; nchunks = 10; % with 10 iterations - NX
+stimPeriod = 1:7; basePeriod = 9:20; chunksize = 20; nchunks = 5;
 
 for j=1:nfiles
 
@@ -72,7 +72,7 @@ for j=1:nfiles
     % raw data:
     elseif exist([fn '.qcamraw'],'file')
         f = 1;
-        for k = 1:nchunks -3 %%
+        for k = 1:nchunks
             rep = read_qcamraw([fn '.qcamraw'], f:(f+chunksize-1));
             stim = mean(rep(:,:,stimPeriod),3);
             base = mean(rep(:,:,basePeriod),3);
@@ -89,7 +89,7 @@ for j=1:nfiles
         end
         % Didn't find .mat file, so write it now:
         outfn = [fn '.mat'];
-        save(outfn, 'stimMean', 'baseMean','diffMean');
+    %    save(outfn, 'stimMean', 'baseMean','diffMean');
     else
         error(['Could not find either file ' fn '.qcamraw or ' fn '.mat'])
     end

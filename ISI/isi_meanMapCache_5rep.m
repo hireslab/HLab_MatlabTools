@@ -47,7 +47,7 @@ if nfiles < 1
 end
 
 
-stimPeriod = 1:4; basePeriod = 11:20; chunksize = 20; nchunks = 10; % with 10 iterations - NX
+stimPeriod = 2:7; basePeriod = 9:20; chunksize = 20; nchunks = 5; % with 10 iterations - NX
 
 for j=1:nfiles
 
