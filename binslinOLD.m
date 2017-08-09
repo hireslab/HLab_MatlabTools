@@ -4,7 +4,7 @@
 % binBounds (vector of bin boundries)
 % 
 
-function [sorted sortedBy binBounds]=binslin(sortBy, toSort, sortMode, binBounds,varargin)
+function [sorted sortedBy binBounds]=binslin(sortBy, toSort, sortMode, binBounds)
 if isempty(sortBy) | isempty(toSort)
     sorted={[]};
     sortedBy={[]};
@@ -21,16 +21,16 @@ else
             binBounds(1:end-1)=binBounds(1:end-1)+1;
             binBounds=tmp(binBounds)';
 
-        else strcmp(sortMode,'equalE'); %JC 160526 sort based on edges, given by min (varargin{1}) and max, varargin{2}
-            binBounds=linspace(min(varargin{1}),max(varargin{2}),binBounds);
+
+        else
         end
 
     end
         sorted=cell(length(binBounds)-1,1);
         sortedBy=cell(length(binBounds)-1,1);
     for i=1:length(binBounds)-1
-        sorted{i}=toSort(sortBy>=binBounds(i) & sortBy<=binBounds(i+1),:); %added all columns JC 160902
-        sortedBy{i}=sortBy(sortBy>=binBounds(i) & sortBy<=binBounds(i+1));
+        sorted{i}=toSort(sortBy>binBounds(i) & sortBy<=binBounds(i+1));
+        sortedBy{i}=sortBy(sortBy>binBounds(i) & sortBy<=binBounds(i+1));
     end
 end
     
