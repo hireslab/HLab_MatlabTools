@@ -21,7 +21,7 @@ end
 slider.filename=filename;
 slider.distance=0;
 slider.path=a;
-slider.val=600;
+slider.val=2000;
 slider.x=[];
 slider.y=[];
 slider.r_ms=1:4500; % ALERT
